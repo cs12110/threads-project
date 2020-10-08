@@ -17,7 +17,7 @@ import lombok.Setter;
  */
 public class LockExample {
 
-    private static LogUtil logUtil = LogUtil.get(SyncExample.class);
+    private static LogUtil logUtil = LogUtil.get(LockExample.class);
 
     @Data
     @Setter
@@ -25,9 +25,6 @@ public class LockExample {
         private int num = 0;
         private ReentrantLock reentrantLock;
 
-        /**
-         * synchronized: 三种方式
-         */
         public void incr() {
             reentrantLock.lock();
             try {
