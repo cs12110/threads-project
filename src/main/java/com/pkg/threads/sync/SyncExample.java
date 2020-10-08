@@ -1,4 +1,4 @@
-package com.pkg.threads.example;
+package com.pkg.threads.sync;
 
 import com.pkg.threads.util.LogUtil;
 import com.pkg.threads.util.ThreadUtil;
