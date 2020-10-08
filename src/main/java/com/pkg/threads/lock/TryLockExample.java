@@ -31,7 +31,7 @@ public class TryLockExample {
                 if (tryLock) {
                     Thread.sleep(5000);
                 }
-                logUtil.info("Function[run] thread:{} all done", threadNgitame);
+                logUtil.info("Function[run] thread:{} all done", threadName);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
