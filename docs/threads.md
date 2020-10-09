@@ -303,17 +303,21 @@ JMM 是围绕原子性,有序性,可见性展开的.
 - `Synchnorized`: 能保证可见性和原子性.
 - `Lock`: `Synchorized`的升级版本.
 
-##### Volatile
+##### 3.3.1 Volatile
 
 内存栅栏的含义和例子说明.
 
-##### Synchnorized
+##### 3.3.2 Synchnorized
 
-##### Lock
+##### 3.3.3 Lock
 
-公平式锁与非公平式锁.
+Lock 对于 Synchnorized 来说是一种升级,有更多的使用方式.例如`ReentrantLock`可以设置公平式锁和非公平式锁,而 Synchnorized 为非公平式锁.
 
-##### CountdownLatch&Join
+- 公平式锁: 多个线程按照申请锁的顺序来获取锁.
+- 非公平式锁: 多个线程获取锁的顺序并不是按照申请锁的顺序,有可能后申请的线程比先申请的线程优先获取锁.
+
+##### 3.3.4 CountdownLatch&Join
+
 
 ```java
 

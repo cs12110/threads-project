@@ -63,6 +63,7 @@ public class LockExample {
         }
 
         try {
+            // 保证线程全部执行完成
             counter.shutdown();
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,4 +1,4 @@
-package com.pkg.threads.example;
+package com.pkg.threads.cas;
 
 import com.pkg.threads.issue.TooManyPoolIssue;
 import com.pkg.threads.util.LogUtil;

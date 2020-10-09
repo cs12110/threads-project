@@ -2,6 +2,7 @@ package com.pkg.threads.lock;
 
 import com.pkg.threads.util.LogUtil;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.AllArgsConstructor;
@@ -25,11 +26,11 @@ public class TryLockExample {
         public void run() {
             boolean tryLock = false;
             try {
-                tryLock = lock.tryLock();
-                //tryLock = lock.tryLock(2, TimeUnit.SECONDS);
+                //tryLock = lock.tryLock();
+                tryLock = lock.tryLock(2, TimeUnit.SECONDS);
                 logUtil.info("Function[run] thread:{} get lock:{}", threadName, tryLock);
                 if (tryLock) {
-                    Thread.sleep(5000);
+                    Thread.sleep(1000);
                 }
                 logUtil.info("Function[run] thread:{} all done", threadName);
             } catch (Exception e) {
