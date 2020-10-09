@@ -1,11 +1,9 @@
 package com.pkg.threads.cas;
 
-import com.pkg.threads.issue.TooManyPoolIssue;
 import com.pkg.threads.util.LogUtil;
+import com.pkg.threads.util.ThreadUtil;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.AllArgsConstructor;
@@ -35,8 +33,7 @@ public class CasExample {
 
         AtomicInteger counter = new AtomicInteger(1);
 
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 2, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10),
-            new TooManyPoolIssue.NightWatcherThreadFactory("dog"));
+        ThreadPoolExecutor executor = ThreadUtil.fixed("dog", 2);
 
         executor.submit(new CasRunnable(counter));
         executor.submit(new CasRunnable(counter));

@@ -10,11 +10,11 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @version V1.0
  * @since 2020-09-02 10:53
  */
-public class ThreadLocallssue {
+public class ThreadLocalIssue {
 
-    private static LogUtil logUtil = LogUtil.get(ThreadLocallssue.class);
-    //private static ThreadLocal<String> threadLocalCache = new ThreadLocal<>();
-    private static InheritableThreadLocal<String> threadLocalCache = new InheritableThreadLocal<>();
+    private static LogUtil logUtil = LogUtil.get(ThreadLocalIssue.class);
+    private static ThreadLocal<String> threadLocalCache = new ThreadLocal<>();
+    //private static InheritableThreadLocal<String> threadLocalCache = new InheritableThreadLocal<>();
 
     public static void set(String value) {
         threadLocalCache.set(value);

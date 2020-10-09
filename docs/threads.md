@@ -129,7 +129,7 @@ public class CallableApp {
 
 • 如果是 IO 密集型应用,则线程池大小设置为 `2*CPU 个数+1`
 
-Q: <u>如果在 Thread 和 Runnable 两种方式里面实现多线程?采用哪种比较好?</u>
+Q: <u>如果采用 Thread 或者 Runnable 实现多线程?采用哪种比较好?</u>
 
 A:
 
@@ -269,7 +269,7 @@ public static ExecutorService newCachedThreadPool() {
 
 ---
 
-### 3. JMM
+### 3. Java 内存
 
 #### 3.1 基础知识
 
@@ -297,17 +297,33 @@ JMM 是围绕原子性,有序性,可见性展开的.
 - 有序性指程序执行的顺序按照代码的先后顺序执行.[link](https://www.cnblogs.com/yeyang/p/13576636.html)
 - 可见性指的是当一个线程修改了某个共享变量的值,其他线程能否马上得知修改的值.
 
+指令重排: 在执行程序时为提高性能,编译器和处理器的常常会对指令做重排
+
+- 编译器优化重排: 编译器在不改变单线程程序语义的前提下,重新安排语句的执行顺序.
+- 指令并行重排: 处理器采用了指令级并行技术来将多条指令重叠执行.如果不存在数据依赖性(即后一个执行的语句无需依赖前面执行的语句的结果),可以改变语句对应的机器指令的执行顺序.
+- 内存系统重排: 由于处理器使用缓存和读写缓存冲区,使得加载(load)和存储(store)操作看上去可能是在乱序执行,因为三级缓存的存在,导致内存与缓存的数据同步存在时间差.
+
 #### 3.3 Volatile&Synchnorized&Lock
 
-- `Volatitle`: 通过内存和禁止指令重排,实现共享变量的可见性,不具备原子性.
+- `Volatitle`: 通过内存栅栏禁止指令重排,实现共享变量的可见性,不具备原子性.
 - `Synchnorized`: 能保证可见性和原子性.
-- `Lock`: `Synchorized`的升级版本.
+- `Lock`: `Synchorized` plus.
 
 ##### 3.3.1 Volatile
 
-内存栅栏的含义和例子说明.
+`Volatile`: 通过内存栅栏禁止指令重排,实现共享变量的可见性,不具备原子性.
+
+指令重排例子如下所示:
+
+```java
+线程 1             线程 2
+1： x2 = a ;      3: x1 = b ;
+2: b = 1;         4: a = 2 ;
+```
 
 ##### 3.3.2 Synchnorized
+
+`Synchnorized`: 能保证可见性和原子性.
 
 ##### 3.3.3 Lock
 
@@ -316,12 +332,17 @@ Lock 对于 Synchnorized 来说是一种升级,有更多的使用方式.例如`R
 - 公平式锁: 多个线程按照申请锁的顺序来获取锁.
 - 非公平式锁: 多个线程获取锁的顺序并不是按照申请锁的顺序,有可能后申请的线程比先申请的线程优先获取锁.
 
+Q: 那么在什么情况下使用`Lock`,什么情况下使用`Synchnorized`?
+
+A: 如果`Synchnorized`可以完成的功能,就用`Synchnorized`,如果`Synchnorized`完成不了,就使用`ReentrantLock`.
+
 ##### 3.3.4 CountdownLatch&Join
 
+在多线程的操作里面,可以看出来如果使用`Thread`或者`Runnable`,在主线程里面是无法知道子线程是否执行完成.
 
-```java
+如果主线程依赖子线程的执行,那么就需要其他的手段来控制.例如:`CountdownLatch`和`Join`.
 
-```
+结论: `CountdownLatch`比`Join`更灵活.
 
 #### 3.4 CAS
 
@@ -330,6 +351,10 @@ Lock 对于 Synchnorized 来说是一种升级,有更多的使用方式.例如`R
 - 乐观锁: 每次不加锁而是假设没有冲突而去完成某项操作,如果冲突失败就重试,直到成功为止.
 
 无锁的实现, compare and swap(对比和转换).CAS 机制当中使用了 3 个基本操作数:`内存地址 V`,`旧的预期值 A`,`新值 B`.
+
+![](imgs/cas1.png)
+![](imgs/cas2.png)
+![](imgs/cas3.png)
 
 Q: 那么使用 cas 相关类有什么需要注意的呀?
 
@@ -453,6 +478,15 @@ public class ThreadLocalExample {
 ```
 
 Q: 上面的代码有什么问题?该如何改进?
+
+输出结果
+
+```java
+2020-10-09 11:12:25,914	[info]	c.p.t.i.ThreadLocalIssue	Function[method1] cache value:haiyan
+2020-10-09 11:12:25,915	[info]	c.p.t.i.ThreadLocalIssue	Function[method2] cache value:value2
+2020-10-09 11:12:25,917	[info]	c.p.t.i.ThreadLocalIssue	Function[run] cache value:null
+2020-10-09 11:12:25,917	[info]	c.p.t.i.ThreadLocalIssue	Function[run] cache value:null
+```
 
 Q: 多线程的情况,例如 spring 的 event 那种还能获取出来吗?
 
