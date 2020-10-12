@@ -31,10 +31,12 @@ public class RunnableApp {
     }
 
     public static void main(String[] args) {
+        logUtil.info("Function[main] start up");
         for (int index = 0; index < 2; index++) {
             String threadName = "simple-thread" + index;
             SimpleRunnable runnable = new SimpleRunnable(threadName);
             new Thread(runnable).start();
         }
+        logUtil.info("Function[main] end");
     }
 }

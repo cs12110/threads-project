@@ -14,12 +14,20 @@ public class ThreadApp {
     public static class SimpleThread extends Thread {
         @Override
         public void run() {
-            logUtil.info("执行完成");
+            try {
+                logUtil.info("Function[run] 吉米.巴特勒拿到了x分y篮板z助攻");
+                Thread.sleep(2000);
+                logUtil.info("Function[run] xx总冠军");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public static void main(String[] args) {
+        logUtil.info("Function[main] start up");
         SimpleThread simpleThread = new SimpleThread();
         simpleThread.start();
+        logUtil.info("Function[main] end");
     }
 }

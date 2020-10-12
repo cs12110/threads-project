@@ -1,14 +1,12 @@
-# 多线程指南
+# Java 多线程
 
-起初图灵创建了计算机.CPU 是单线程的,内存虚弱.代码的灵运行在打孔纸带上.
-
-文档演示代码 [github link](https://github.com/cs12110/threads-project)
+Java多线程技术分享文档.演示代码项目 [github link](https://github.com/cs12110/threads-project)
 
 ---
 
 ### 1. 线程
 
-ta 那时候还太年轻,不知道所有 Java 里面的线程,早已在暗中标好了价格.
+起初图灵创建了计算机.CPU 是单线程的,内存虚弱.代码的灵运行在打孔纸带上.
 
 #### 1.1 Thread
 
@@ -20,13 +18,21 @@ public class ThreadApp {
     public static class SimpleThread extends Thread {
         @Override
         public void run() {
-            logUtil.info("执行完成");
+            try {
+                logUtil.info("Function[run] 吉米.巴特勒拿到了x分y篮板z助攻");
+                Thread.sleep(2000);
+                logUtil.info("Function[run] xx总冠军");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public static void main(String[] args) {
+        logUtil.info("Function[main] start up");
         SimpleThread simpleThread = new SimpleThread();
         simpleThread.start();
+        logUtil.info("Function[main] end");
     }
 }
 ```
@@ -34,7 +40,10 @@ public class ThreadApp {
 测试结果
 
 ```java
-2020-08-06 15:27:08,558	[info]	com.pkg.threads.simple.ThreadApp$SimpleThread	执行完成
+2020-10-12 11:36:18,985	[info]	c.p.t.s.ThreadApp$SimpleThread	Function[main] start up
+2020-10-12 11:36:18,987	[info]	c.p.t.s.ThreadApp$SimpleThread	Function[run] 吉米.巴特勒拿到了x分y篮板z助攻
+2020-10-12 11:36:18,987	[info]	c.p.t.s.ThreadApp$SimpleThread	Function[main] end
+2020-10-12 11:36:20,991	[info]	c.p.t.s.ThreadApp$SimpleThread	Function[run] xx总冠军
 ```
 
 #### 1.2 Runnable
@@ -86,26 +95,29 @@ public class RunnableApp {
 
 ```java
 public class CallableApp {
-
     private static LogUtil logUtil = new LogUtil(SimpleCallable.class);
 
     public static class SimpleCallable implements Callable<Object> {
-
         @Override
-        public Object call() throws Exception {
-            return "返回值";
+        public Object call() {
+            try {
+                Thread.sleep(3000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return "2nd & 11";
         }
     }
 
     public static void main(String[] args) {
         SimpleCallable callable = new SimpleCallable();
 
+        logUtil.info("Function[main] start up");
         FutureTask<Object> futureTask = new FutureTask<>(callable);
         new Thread(futureTask).start();
-
         try {
             Object o = futureTask.get();
-            logUtil.info("Value:{}", o);
+            logUtil.info("Function[main] callable value:{}", o);
         } catch (Exception e) {
             logUtil.error(e.getMessage());
         }
@@ -116,20 +128,17 @@ public class CallableApp {
 测试结果
 
 ```java
-2020-08-06 15:27:54,362	[info]	com.pkg.threads.simple.CallableApp$SimpleCallable	Value:返回值
+2020-10-12 10:14:01,337	[info]	c.p.t.s.CallableApp$SimpleCallable	Function[main] start up
+2020-10-12 10:14:04,445	[info]	c.p.t.s.CallableApp$SimpleCallable	Function[main] callable value:2nd & 11
 ```
 
 #### 1.4 小节总结
 
-多线程使用准则第一条: `如果能用一条线程解决,就千万别用两条线程.`
+ta 那时候还太年轻,不知道所有 Java 里面的线程,早已在暗中标好了价格.
 
-线程数的大小设计
+多线程使用准则第一条: **如果能用一条线程解决,就千万别用两条线程.**
 
-• 如果是 CPU 密集型应用,则线程池大小设置为 `CPU 个数+1`
-
-• 如果是 IO 密集型应用,则线程池大小设置为 `2*CPU 个数+1`
-
-<span style='color:pink'>Q:</span> <u>如果采用 Thread 或者 Runnable 实现多线程?采用哪种比较好?</u>
+<span style='color:pink'>Q:</span> <u>如果采用 Thread 或者 Runnable 实现多线程,使用哪种比较好?</u>
 
 A: 推荐使用 Runnable,因为 Java 的单继承原则.
 
@@ -139,7 +148,7 @@ A: 推荐使用 Runnable,因为 Java 的单继承原则.
 
 如果频繁的创建线程和销毁会导致资源的损耗,所以使用池的方式来降低资源损耗.
 
-FBI Warning:`线程池不会自动关闭.`
+<span style='color:red'>FBI Warning:</span>**线程池不会自动关闭.**
 
 #### 2.1 ThreadPoolExecutor
 
@@ -170,12 +179,26 @@ public static ThreadPoolExecutor build() {
 
 陆续创建核心线程数大小的线程 -> 消费不过了,放到等待队列里面 -> 队列满了 -> 扩充线程池线程数,最大为最大线程数 -> 队列满了(有边界的队列才会满 `orz`),池已经扩充到最大,还消费不过来-> 默认采取拒绝策略.
 
-策略
+线程池策略
+
+- AbortPolicy: 任务丢弃,抛出异常(默认策略).
+
+- DiscardPolicy: 任务直接抛弃,不会抛异常也不会执行.
+
+- DiscardOldestPolicy: 抛弃任务队列中最旧的任务,新任务添加进去.
 
 - CallerRunsPolicy: 调用当前线程池的所在的线程去执行被拒绝的任务.
-- AbortPolicy: 任务丢弃,抛出异常(默认策略).
-- DiscardPolicy: 任务直接抛弃,不会抛异常也不会执行.
-- DiscardOldestPolicy: 抛弃任务队列中最旧的任务,新任务添加进去.
+
+  ```java
+  /**
+   * 如果当前线程池尚未关闭,直接执行线程的run方法.
+   */
+  public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+    if (!e.isShutdown()) {
+      r.run();
+    }
+  }
+  ```
 
 关于线程池的命名: **便于监控查看.**
 
@@ -263,15 +286,21 @@ public static ExecutorService newCachedThreadPool() {
 
 **结论**: <u>Executors 底层是 ThreadPoolExecutor 构建的,所以掌握 ThreadPoolExecutor 至关重要.</u>
 
-#### 2.3 扩展阅读
+#### 2.3 小节总结
 
-[线程池执行原理 link](https://mr3306.top/docs/#/javase/java-threadpool?id=_7-%e7%ba%bf%e7%a8%8b%e6%b1%a0%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86)
+如果想详细了解线程池的执行原理,可以参考: [线程池执行原理 link](https://mr3306.top/docs/#/javase/java-threadpool?id=_7-%e7%ba%bf%e7%a8%8b%e6%b1%a0%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86)
+
+线程数的大小设计
+
+• 如果是 CPU 密集型应用,则线程池大小设置为 `CPU 个数+1`
+
+• 如果是 IO 密集型应用,则线程池大小设置为 `2*CPU 个数+1`
 
 ---
 
 ### 3. Java 内存
 
-这里的 Java 内存特指: Java Memery Model.
+这里特指: `Java Memery Model`. :"}
 
 #### 3.1 JMM
 
@@ -281,15 +310,15 @@ public static ExecutorService newCachedThreadPool() {
 
 - 工作内存
 
-主要存储当前方法的所有本地变量信息(工作内存中存储着主内存中的变量副本拷贝),每个线程只能访问自己的工作内存,即线程中的本地变量对其它线程是不可见的,就算是两个线程执行的是同一段代码,它们也会各自在自己的工作内存中创建属于当前线程的本地变量,当然也包括了字节码行号指示器,相关 Native 方法的信息.注意由于工作内存是每个线程的私有数据,线程间无法相互访问工作内存,因此存储在工作内存的数据不存在线程安全问题.
+主要存储当前方法的所有本地变量信息(工作内存中存储着主内存中的变量副本拷贝),**每个线程只能访问自己的工作内存,即线程中的本地变量对其它线程是不可见**的,就算是两个线程执行的是同一段代码,它们也会各自在自己的工作内存中创建属于当前线程的本地变量,当然也包括了字节码行号指示器,相关 Native 方法的信息.注意由于工作内存是每个线程的私有数据,线程间无法相互访问工作内存,因此存储在工作内存的数据不存在线程安全问题.
 
 ![](imgs/jmm.jpg)
 
 JMM 是围绕原子性,有序性,可见性展开的.
 
-- 原子性指的是一个操作是不可中断的,即使是在多线程环境下,一个操作一旦开始就不会被其他线程影响.
-- 有序性指程序执行的顺序按照代码的先后顺序执行.[link](https://www.cnblogs.com/yeyang/p/13576636.html)
-- 可见性指的是当一个线程修改了某个共享变量的值,其他线程能否马上得知修改的值.
+- 原子性: 一个操作是不可中断的,即使是在多线程环境下,一个操作一旦开始就不会被其他线程影响.
+- 有序性: 指程序执行的顺序按照代码的先后顺序执行.[link](https://www.cnblogs.com/yeyang/p/13576636.html)
+- 可见性: 当一个线程修改了某个共享变量的值,其他线程能否马上得知修改的值.
 
 指令重排: 在执行程序时为提高性能,编译器和处理器的常常会对指令做重排
 
@@ -300,11 +329,11 @@ JMM 是围绕原子性,有序性,可见性展开的.
 
 在线程里面所有操作的数据来自该工作内存,操作完成后再刷回主存里面去.
 
-Q: 在线程执行方法的时候,有哪些数据存放到工作空间里面呀?
+<span style='color:pink'>Q:</span>  在线程执行方法的时候,有哪些数据存放到工作空间里面呀?
 
 A: 根据虚拟机规范,对于一个实例对象中的成员方法而言,如果方法中包含本地变量是基本数据类型(boolean,byte,short,char,int,long,float,double)将直接存储在工作内存的帧栈结构中.但倘若本地变量是引用类型,那么该变量的引用会存储在功能内存的帧栈中.而对象实例将存储在主内存(共享数据区域堆)中.但对于实例对象的成员变量,不管它是基本数据类型或者包装类型(Integer,Double 等)还是引用类型,都会被存储到堆区.至于 static 变量以及类本身相关信息将会存储在主内存中.需要注意的是,在主内存中的实例对象可以被多线程共享.倘若两个线程同时调用了同一个对象的同一个方法.那么两条线程会将要操作的数据拷贝一份到自己的工作内存中.执行完成操作后才刷新到主内存.[link](https://blog.csdn.net/javazejian/article/details/72772461)
 
-Q: 那么我们有什么方法解决线程安全的问题呀?
+<span style='color:pink'>Q:</span> 那么我们有什么方法解决线程安全的问题呀?
 
 A: 共享数据才有线程安全问题.如果需要控制共享数据的线程安全,可以使用 java 的`volatile`,`synchonrized`,`lock`等对数据操作进行控制.
 
@@ -314,17 +343,38 @@ A: 共享数据才有线程安全问题.如果需要控制共享数据的线程�
 
 ##### 3.2.1 volatile
 
-`Volatile`: 通过内存栅栏禁止指令重排,实现共享变量的可见性,不具备原子性.
+`Volatile`: 通过内存屏障(Memory Barrier)禁止指令重排,实现共享变量的可见性,不具备原子性.
 
 指令重排例子如下所示:
 
 ```java
-
+线程 1             线程 2
+1: x2 = a ;      3: x1 = b ;
+2: b = 1;        4: a = 2 ;
 ```
+
+在上面的例子可以看出
+
+- 线程1的语句2是不依赖语句1的结果
+
+- 线程2的语句4也是不依赖语句3的结果
+
+那么在这种情况下,就看会被编译器优化,对执行指令进行重排,比如在线程2中,语句4执行顺序先于语句3,在线程1中也有可能发生指令重排,语句2执行先于语句1,那么实际中就有可能出现下面的执行结果:
+
+```java
+线程 1             线程 2
+1: b = 1 ;      3:  a=2 ;
+2: x2=a;        4:  x1=b ;
+```
+
+内存屏障(Memory Barrier)又称内存栅栏,作用有两个:
+
+- 保证特定操作的执行顺序.
+- 保证某些变量的内存可见性.
 
 ##### 3.2.2 synchnorized
 
-`Synchnorized`: 能保证可见性和原子性.
+`Synchnorized`: 具有可见性和原子性,对比volatile多了原子性.
 
 synchronized 最主要有以下 3 种应用方式
 
@@ -334,7 +384,7 @@ synchronized 最主要有以下 3 种应用方式
 
 ##### 3.2.3 lock
 
-Lock 对于 Synchnorized 来说是一种升级,有更多的使用方式.例如`ReentrantLock`可以设置公平式锁和非公平式锁,而 Synchnorized 为非公平式锁.
+Lock 对于 Synchnorized 来说是一种升级,有更多的使用方式.例如`ReentrantLock`可以设置公平式锁和非公平式锁.
 
 - 公平式锁: 多个线程按照申请锁的顺序来获取锁.
 - 非公平式锁: 多个线程获取锁的顺序并不是按照申请锁的顺序,有可能后申请的线程比先申请的线程优先获取锁.
@@ -353,6 +403,8 @@ A: 如果`Synchnorized`可以完成的功能,就用`Synchnorized`,如果`Synchno
 
 #### 3.3 CAS
 
+使用锁(lock)或者synchronize这些,在得到锁执行的时候,会发生上下文切换.如果一些简单的并发控制是不是可以不使用这么复杂的机制来实现?
+
 - 悲观锁: 线程一旦得到锁,其他需要锁的线程挂起等待.
 
 - 乐观锁: 每次不加锁而是假设没有冲突而去完成某项操作,如果冲突失败就重试,直到成功为止.
@@ -367,9 +419,15 @@ A: 如果`Synchnorized`可以完成的功能,就用`Synchnorized`,如果`Synchno
 
 A: CAS 只能保证自己的原子性,不能保证其他的原子性.自旋时间过长等问题.
 
+#### 3.4 小节总结
+
+这一块几乎是多线程最重要的一块,了解这一块对多线程的数据安全才有把握.
+
 ---
 
 ### 4. 常见案例
+
+多线程使用的常见案例.
 
 #### 4.1 线程池统计
 
@@ -400,9 +458,9 @@ A: 出现构建了多个线程池的情况.把线程池移动出去成为 static
 问题描述:当 SimpleDateFormat 作为公共变量,多线程调用格式化日期出现异常.
 
 ```java
-public class SdfExample {
+public class SimpleDateFormatIssue {
 
-    private static LogUtil logUtil = LogUtil.get(SdfExample.class);
+    private static LogUtil logUtil = LogUtil.get(SimpleDateFormatIssue.class);
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private static ThreadLocal<SimpleDateFormat> threadLocal = ThreadLocal
@@ -448,10 +506,11 @@ public class SdfExample {
 调用链路的日志打印,例如 logback 的 mdc.
 
 ```java
-public class ThreadLocalExample {
+public class ThreadLocalIssue {
 
-    private static LogUtil logUtil = LogUtil.get(ThreadLocalExample.class);
+    private static LogUtil logUtil = LogUtil.get(ThreadLocalIssue.class);
     private static ThreadLocal<String> threadLocalCache = new ThreadLocal<>();
+    //private static InheritableThreadLocal<String> threadLocalCache = new InheritableThreadLocal<>();
 
     public static void set(String value) {
         threadLocalCache.set(value);
@@ -465,11 +524,24 @@ public class ThreadLocalExample {
         threadLocalCache.remove();
     }
 
+    public static class ThreadValueRunner implements Runnable {
+
+        @Override
+        public void run() {
+            logUtil.info("Function[run] cache value:{}", get());
+        }
+    }
+
     public static void main(String[] args) {
+        ThreadPoolExecutor pool = ThreadUtil.fixed("local-pool", 2);
+
         set("haiyan");
         method1();
         set("value2");
         method2();
+
+        pool.submit(new ThreadValueRunner());
+        pool.submit(new ThreadValueRunner());
     }
 
     public static void method1() {
@@ -486,7 +558,7 @@ public class ThreadLocalExample {
 }
 ```
 
-Q: 上面的代码有什么问题?该如何改进?
+<span style='color:pink'>Q:</span>  上面的代码有什么问题?该如何改进?
 
 输出结果
 
@@ -499,15 +571,15 @@ Q: 上面的代码有什么问题?该如何改进?
 
 <span style='color:pink'>Q:</span> 多线程的情况,例如 spring 的 event 那种还能获取出来吗?
 
-#### 4.4 更多
+#### 4.4 小节总结
 
-如想了解更多案例,可以参考: [fucking-java-concurrency github link](https://github.com/oldratlee/fucking-java-concurrency)
+了解更多案例,可参考: [fucking-java-concurrency github link](https://github.com/oldratlee/fucking-java-concurrency)
 
 ---
 
 ### 5. 致谢
 
-多线程演义第五章: <u>多年以后,我站在施工队的砖头前,准会想起给各位大佬讲多线程演义的那个遥远的午后.</u>
+多年以后,我站在施工队的砖头前,准会想起给各位大佬讲多线程演义的那个遥远的午后.
 
 **参考文档**
 
