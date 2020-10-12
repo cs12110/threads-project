@@ -1,6 +1,6 @@
-# 多线程演义
+# 多线程指南
 
-多线程演义第一章: 起初图灵创建了计算机.CPU 是单线程的,内存虚弱.代码的灵运行在打孔纸带上.
+起初图灵创建了计算机.CPU 是单线程的,内存虚弱.代码的灵运行在打孔纸带上.
 
 文档演示代码 [github link](https://github.com/cs12110/threads-project)
 
@@ -8,7 +8,7 @@
 
 ### 1. 线程
 
-多线程演义第二章: ta 那时候还太年轻,不知道所有 Java 里面的线程,早已在暗中标好了价格.
+ta 那时候还太年轻,不知道所有 Java 里面的线程,早已在暗中标好了价格.
 
 #### 1.1 Thread
 
@@ -129,9 +129,9 @@ public class CallableApp {
 
 • 如果是 IO 密集型应用,则线程池大小设置为 `2*CPU 个数+1`
 
-Q: <u>如果采用 Thread 或者 Runnable 实现多线程?采用哪种比较好?</u>
+<span style='color:pink'>Q:</span> <u>如果采用 Thread 或者 Runnable 实现多线程?采用哪种比较好?</u>
 
-A:
+A: 推荐使用 Runnable,因为 Java 的单继承原则.
 
 ---
 
@@ -172,8 +172,8 @@ public static ThreadPoolExecutor build() {
 
 策略
 
-- CallerRunsPolicy:
-- AbortPolicy: 任务丢弃,抛出异常.
+- CallerRunsPolicy: 调用当前线程池的所在的线程去执行被拒绝的任务.
+- AbortPolicy: 任务丢弃,抛出异常(默认策略).
 - DiscardPolicy: 任务直接抛弃,不会抛异常也不会执行.
 - DiscardOldestPolicy: 抛弃任务队列中最旧的任务,新任务添加进去.
 
@@ -261,7 +261,7 @@ public static ExecutorService newCachedThreadPool() {
 }
 ```
 
-**结论**: <u>`java.util.concurrent.Executors`底层是`ThreadPoolExecutor`构建的,所以掌握`ThreadPoolExecutor`至关重要.</u>
+**结论**: <u>Executors 底层是 ThreadPoolExecutor 构建的,所以掌握 ThreadPoolExecutor 至关重要.</u>
 
 #### 2.3 扩展阅读
 
@@ -271,7 +271,9 @@ public static ExecutorService newCachedThreadPool() {
 
 ### 3. Java 内存
 
-#### 3.1 基础知识
+这里的 Java 内存特指: Java Memery Model.
+
+#### 3.1 JMM
 
 - 主内存
 
@@ -283,14 +285,6 @@ public static ExecutorService newCachedThreadPool() {
 
 ![](imgs/jmm.jpg)
 
-#### 3.2 JMM
-
-在线程里面所有操作的数据来自该工作内存,操作完成后再刷回主存里面去.
-
-Q: 在执行方法的时候,有哪些数据存放到工作空间里面呀?
-
-A: 根据虚拟机规范.对于一个实例对象中的成员方法而言.如果方法中包含本地变量是基本数据类型(boolean,byte,short,char,int,long,float,double).将直接存储在工作内存的帧栈结构中.但倘若本地变量是引用类型.那么该变量的引用会存储在功能内存的帧栈中.而对象实例将存储在主内存(共享数据区域.堆)中.但对于实例对象的成员变量.不管它是基本数据类型或者包装类型(Integer,Double 等)还是引用类型.都会被存储到堆区.至于 static 变量以及类本身相关信息将会存储在主内存中.需要注意的是.在主内存中的实例对象可以被多线程共享.倘若两个线程同时调用了同一个对象的同一个方法.那么两条线程会将要操作的数据拷贝一份到自己的工作内存中.执行完成操作后才刷新到主内存.[link](https://blog.csdn.net/javazejian/article/details/72772461)
-
 JMM 是围绕原子性,有序性,可见性展开的.
 
 - 原子性指的是一个操作是不可中断的,即使是在多线程环境下,一个操作一旦开始就不会被其他线程影响.
@@ -301,42 +295,55 @@ JMM 是围绕原子性,有序性,可见性展开的.
 
 - 编译器优化重排: 编译器在不改变单线程程序语义的前提下,重新安排语句的执行顺序.
 - 指令并行重排: 处理器采用了指令级并行技术来将多条指令重叠执行.如果不存在数据依赖性(即后一个执行的语句无需依赖前面执行的语句的结果),可以改变语句对应的机器指令的执行顺序.
-- 内存系统重排: 由于处理器使用缓存和读写缓存冲区,使得加载(load)和存储(store)操作看上去可能是在乱序执行,因为三级缓存的存在,导致内存与缓存的数据同步存在时间差.
 
-#### 3.3 Volatile&Synchnorized&Lock
+#### 3.2 线程安全
 
-- `Volatitle`: 通过内存栅栏禁止指令重排,实现共享变量的可见性,不具备原子性.
-- `Synchnorized`: 能保证可见性和原子性.
-- `Lock`: `Synchorized` plus.
+在线程里面所有操作的数据来自该工作内存,操作完成后再刷回主存里面去.
 
-##### 3.3.1 Volatile
+Q: 在线程执行方法的时候,有哪些数据存放到工作空间里面呀?
+
+A: 根据虚拟机规范,对于一个实例对象中的成员方法而言,如果方法中包含本地变量是基本数据类型(boolean,byte,short,char,int,long,float,double)将直接存储在工作内存的帧栈结构中.但倘若本地变量是引用类型,那么该变量的引用会存储在功能内存的帧栈中.而对象实例将存储在主内存(共享数据区域堆)中.但对于实例对象的成员变量,不管它是基本数据类型或者包装类型(Integer,Double 等)还是引用类型,都会被存储到堆区.至于 static 变量以及类本身相关信息将会存储在主内存中.需要注意的是,在主内存中的实例对象可以被多线程共享.倘若两个线程同时调用了同一个对象的同一个方法.那么两条线程会将要操作的数据拷贝一份到自己的工作内存中.执行完成操作后才刷新到主内存.[link](https://blog.csdn.net/javazejian/article/details/72772461)
+
+Q: 那么我们有什么方法解决线程安全的问题呀?
+
+A: 共享数据才有线程安全问题.如果需要控制共享数据的线程安全,可以使用 java 的`volatile`,`synchonrized`,`lock`等对数据操作进行控制.
+
+- `volatitle`: 通过内存栅栏禁止指令重排,实现共享变量的可见性,不具备原子性.
+- `synchnorized`: 能保证可见性和原子性.
+- `lock`: `synchorized` plus.
+
+##### 3.2.1 volatile
 
 `Volatile`: 通过内存栅栏禁止指令重排,实现共享变量的可见性,不具备原子性.
 
 指令重排例子如下所示:
 
 ```java
-线程 1             线程 2
-1： x2 = a ;      3: x1 = b ;
-2: b = 1;         4: a = 2 ;
+
 ```
 
-##### 3.3.2 Synchnorized
+##### 3.2.2 synchnorized
 
 `Synchnorized`: 能保证可见性和原子性.
 
-##### 3.3.3 Lock
+synchronized 最主要有以下 3 种应用方式
+
+- 修饰实例方法: 作用于当前实例加锁,进入同步代码前要获得当前实例的锁.
+- 修饰静态方法: 作用于当前类对象加锁,进入同步代码前要获得当前类对象的锁.
+- 修饰代码块: 指定加锁对象,对给定对象加锁,进入同步代码库前要获得给定对象的锁.
+
+##### 3.2.3 lock
 
 Lock 对于 Synchnorized 来说是一种升级,有更多的使用方式.例如`ReentrantLock`可以设置公平式锁和非公平式锁,而 Synchnorized 为非公平式锁.
 
 - 公平式锁: 多个线程按照申请锁的顺序来获取锁.
 - 非公平式锁: 多个线程获取锁的顺序并不是按照申请锁的顺序,有可能后申请的线程比先申请的线程优先获取锁.
 
-Q: 那么在什么情况下使用`Lock`,什么情况下使用`Synchnorized`?
+<span style='color:pink'>Q:</span> <u>那么在什么情况下使用`Lock`,什么情况下使用`Synchnorized`?</u>
 
 A: 如果`Synchnorized`可以完成的功能,就用`Synchnorized`,如果`Synchnorized`完成不了,就使用`ReentrantLock`.
 
-##### 3.3.4 CountdownLatch&Join
+##### 3.2.4 CountdownLatch&Join
 
 在多线程的操作里面,可以看出来如果使用`Thread`或者`Runnable`,在主线程里面是无法知道子线程是否执行完成.
 
@@ -344,7 +351,7 @@ A: 如果`Synchnorized`可以完成的功能,就用`Synchnorized`,如果`Synchno
 
 结论: `CountdownLatch`比`Join`更灵活.
 
-#### 3.4 CAS
+#### 3.3 CAS
 
 - 悲观锁: 线程一旦得到锁,其他需要锁的线程挂起等待.
 
@@ -356,9 +363,9 @@ A: 如果`Synchnorized`可以完成的功能,就用`Synchnorized`,如果`Synchno
 ![](imgs/cas2.png)
 ![](imgs/cas3.png)
 
-Q: 那么使用 cas 相关类有什么需要注意的呀?
+<span style='color:pink'>Q:</span> 那么使用 cas 相关类有什么需要注意的呀?
 
-A:
+A: CAS 只能保证自己的原子性,不能保证其他的原子性.自旋时间过长等问题.
 
 ---
 
@@ -384,11 +391,13 @@ for (; requestTimes < 2; requestTimes++) {
 logUtil.info("Main method is done");
 ```
 
-Q: 这个会出现什么问题?要怎么优化?
+<span style='color:pink'>Q:</span> 这个会出现什么问题?要怎么优化?
 
-A:
+A: 出现构建了多个线程池的情况.把线程池移动出去成为 static 全局变量(这个其实也不算合理).
 
 #### 4.2 SimpleDateFormat
+
+问题描述:当 SimpleDateFormat 作为公共变量,多线程调用格式化日期出现异常.
 
 ```java
 public class SdfExample {
@@ -488,7 +497,7 @@ Q: 上面的代码有什么问题?该如何改进?
 2020-10-09 11:12:25,917	[info]	c.p.t.i.ThreadLocalIssue	Function[run] cache value:null
 ```
 
-Q: 多线程的情况,例如 spring 的 event 那种还能获取出来吗?
+<span style='color:pink'>Q:</span> 多线程的情况,例如 spring 的 event 那种还能获取出来吗?
 
 #### 4.4 更多
 
