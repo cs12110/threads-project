@@ -36,9 +36,9 @@ public class ThreadPoolReduceWatcherTest {
 
     public static void main(String[] args) {
 
-        ThreadPoolExecutor pool = new ThreadPoolExecutor(2, 4, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(2));
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(2, 4, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(3));
 
-        for (int index = 0; index < 6; index++) {
+        for (int index = 0; index < 1; index++) {
             String threadName = "t" + index;
 
             pool.submit(new WatneyRunnable(threadName));
