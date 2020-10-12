@@ -17,7 +17,7 @@ import lombok.Data;
  * @version V1.0
  * @since 2020-09-14 16:35
  */
-public class ThreadPolicy {
+public class ThreadPoolRejectPolicyTest {
 
     @Data
     @AllArgsConstructor

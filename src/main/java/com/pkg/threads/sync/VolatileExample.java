@@ -22,6 +22,7 @@ public class VolatileExample {
 
     @Data
     public static class DataStore {
+        //private volatile  boolean isProvideFinish;
         private boolean isProvideFinish;
         private List<Object> values;
     }
@@ -53,10 +54,10 @@ public class VolatileExample {
         @Override
         public void run() {
             logUtil.info("Function[DataConsumer.run] start");
-            while (!dataStore.isProvideFinish) {
-                // do something
-            }
 
+            // 等待数据生产结束
+            while (!dataStore.isProvideFinish) {
+            }
             logUtil.info("Function[DataConsumer.run] values:{}", JSON.toJSONString(dataStore.getValues()));
             logUtil.info("Function[DataConsumer.run] end");
         }
