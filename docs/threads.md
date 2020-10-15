@@ -302,7 +302,7 @@ Executors 底层是 ThreadPoolExecutor 构建的,所以掌握 ThreadPoolExecutor
 
 ### 3. Java 内存模型
 
-这里特指: `Java Memery Model`. :"}
+这里特指: `Java Memory Model`. :"}
 
 #### 3.1 JMM
 
@@ -394,6 +394,20 @@ Lock 对于 Synchnorized 来说是一种升级,有更多的使用方式.例如`R
 <span style='color:pink'>Q:</span> <u>那么在什么情况下使用`Lock`,什么情况下使用`Synchnorized`?</u>
 
 A: 如果`Synchnorized`可以完成的功能,就用`Synchnorized`,如果`Synchnorized`完成不了,就使用`ReentrantLock`.
+
+`ReentrantLock` 与 `Synchnorized`的比较
+
+|            | ReentrantLock             | Synchnorized       |
+| ---------- | ------------------------- | ------------------ |
+| 锁实现机制 | 依赖 AQS                  | 监视器模式         |
+| 灵活性     | 支持中断,超时,尝试获取锁  | 不灵活             |
+| 释放形式   | 必须显示调用 unlock()释放 | 自动释放释放监听器 |
+| 锁类型     | 公平式锁,非公平式锁       | 非公平式锁         |
+| 重入性     | 可重入                    | 可重入             |
+
+Java 主流锁的相关概念:
+
+![](imgs/lock.jpg)
 
 ##### 3.2.4 CountdownLatch&Join
 
